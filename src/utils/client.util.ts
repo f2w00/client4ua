@@ -1,6 +1,7 @@
-import { existsSync, readFile, writeFile } from 'fs'
-import { Log } from '../common/log'
+import { existsSync, readFile, writeFile, readFileSync } from 'fs'
 import { throws } from 'assert'
+
+const Log = require('../common/log')
 
 /**
  * @description nodeToModify应该传入一个字符串数组,按顺序描述json节点,
@@ -78,29 +79,26 @@ export function modifyJsonNode(
  */
 export function getJsonNode(path: string, nodeToSelect: string[]): any {
     if (existsSync(path)) {
-        readFile(path, (err, data) => {
-            if (err) {
-                Log.error(err.message)
-            } else {
-                if (data.length === 0) {
-                    Log.error('empty file')
-                    throw Error('empty file')
-                } else {
-                    let temp = JSON.parse(data.toString())
-                    for (let i = 0; i < nodeToSelect.length - 1; i++) {
-                        temp = temp[nodeToSelect[i]]
-                    }
-                    if (temp[nodeToSelect[nodeToSelect.length - 1]]) {
-                        return temp[nodeToSelect[nodeToSelect.length - 1]]
-                    } else {
-                        Log.error('no such node')
-                        throw Error('no such node')
-                    }
-                }
+        let data = readFileSync(path).toString()
+        if (data.length === 0) {
+            Log.error('empty file')
+            throw Error('empty file')
+        } else {
+            let temp = JSON.parse(data.toString())
+            for (let i = 0; i < nodeToSelect.length - 1; i++) {
+                temp = temp[nodeToSelect[i]]
             }
-        })
+            if (temp[nodeToSelect[nodeToSelect.length - 1]]) {
+                console.log(temp[nodeToSelect[nodeToSelect.length - 1]])
+                return temp[nodeToSelect[nodeToSelect.length - 1]]
+            } else {
+                Log.error('no such node')
+                throw Error('no such node')
+            }
+        }
     } else {
         Log.error('no such file')
         throw Error('no such file')
     }
 }
+

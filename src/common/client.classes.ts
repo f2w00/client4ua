@@ -28,8 +28,9 @@ import {
     CertificateManager,
 } from 'node-opcua'
 import { EventEmitter } from 'events'
-import { Log } from './log'
-import { UaMessageQueue } from './mq'
+
+const UaMessageQueue = require('../common/mq')
+const Log = require('../common/log')
 
 // let endPointUrl = 'opc.tcp://WIN-4D29EPFU0V6:26543'
 
@@ -45,7 +46,7 @@ class UaCertificate {
     }
 }
 
-class UaSubscription {
+export class UaSubscription {
     subscription!: ClientSubscription
     monitoredItemGroup!: ClientMonitoredItemGroup
     monitoredItems!: ClientMonitoredItem[]
@@ -162,7 +163,7 @@ class UaSubscription {
     }
 }
 
-class UaSession {
+export class UaSession {
     session!: ClientSession
     uaSubscriptions!: UaSubscription//ClientSubscription[]
     userIdentity: UserIdentityInfo
@@ -229,162 +230,162 @@ class UaSession {
 
 }
 
-class UaClient {
-    client: OPCUAClient
-    uaConnectionAlive: boolean
-    uaSession!: UaSession
+// export class UaClient {
+//     client: OPCUAClient
+//     uaConnectionAlive: boolean
+//     uaSession!: UaSession
+//
+//     constructor(clientOptions: OPCUAClientOptions) {
+//         this.client = OPCUAClient.create(clientOptions)
+//         this.uaConnectionAlive = false
+//     }
+//
+//     async createClientSession(userInfo?: UserIdentityInfo) {
+//         this.uaSession = new UaSession(userInfo)
+//         await this.uaSession.createSession(this.client)
+//     }
+//
+//     async connectToServer(endpointUrl: string) {
+//         try {
+//             await this.client.connect(endpointUrl)
+//             Log.info('Established connection.', { Endpoint: endpointUrl })
+//             console.log('success')
+//         } catch (e) {
+//             Log.error('error')
+//         }
+//     }
+//
+//     async disconnectFromServer(deleteSubscription?: boolean) {
+//         if (this.uaSession) {
+//             try {
+//                 await this.uaSession.closeSession(deleteSubscription)
+//                 Log.info('Session closed')
+//             } catch (e: any) {
+//                 Log.error('Error closing UA session.', { error: e.message })
+//             }
+//         }
+//         await this.client.disconnect()
+//         Log.info('Client disconnected')
+//     }
+//
+//     async getServersOnNetwork(options?: FindServersOnNetworkRequestOptions): Promise<ServerOnNetwork[]> {
+//         let servers = await this.client.findServersOnNetwork(options)
+//         if (!servers) Log.error('no servers')
+//         return servers
+//     }
+//
+//     async getEndpoints(): Promise<EndpointDescription[]> {
+//         let endpoints = await this.client.getEndpoints()
+//         if (!endpoints) Log.warn('endpoints不存在')
+//         return endpoints
+//     }
+//
+//     getPrivateKey() {
+//         Log.info('get private key')
+//         return this.client.getPrivateKey()
+//     }
+//
+//     getCertificate() {
+//         Log.info('get certificate')
+//         return this.client.getCertificate()
+//     }
 
-    constructor(clientOptions: OPCUAClientOptions) {
-        this.client = OPCUAClient.create(clientOptions)
-        this.uaConnectionAlive = false
-    }
+// makeSubject(){
+//     OPCUACertificateManager
+// }
 
-    async createClientSession(userInfo?: UserIdentityInfo) {
-        this.uaSession = new UaSession(userInfo)
-        await this.uaSession.createSession(this.client)
-    }
+// constructor(endpointMustExist = false, clientName = 'clientName', keepSessionAlive = true,
+//             applicationName = 'name', certificateFilePath = null, securityMode = MessageSecurityMode.None,
+//             securityPolicy = SecurityPolicy.None, privateKeyFile = null,
+//             connectionStrategy = {
+//                 maxRetry: 3,
+//                 maxDelay: 2000,
+//                 initialDelay: 1000,
+//             }) {
+//     this.client = OPCUA.OPCUAClient.create({
+//         applicationName: applicationName,
+//         certificateFile: certificateFilePath,
+//         endpointMustExist: endpointMustExist,
+//         clientName: clientName,
+//         connectionStrategy: connectionStrategy,
+//         keepSessionAlive: keepSessionAlive,
+//         securityMode: securityMode,
+//         securityPolicy: securityPolicy,
+//         privateKeyFile: privateKeyFile,
+//     })
+//     this.uaSession = null
+//     this.uaConnectionAlive = null
+//     this.uaSubscription = null
+// }
+// }
 
-    async connectToServer(endpointUrl: string) {
-        try {
-            await this.client.connect(endpointUrl)
-            Log.info('Established connection.', { Endpoint: endpointUrl })
-            console.log('success')
-        } catch (e) {
-            Log.error('error')
-        }
-    }
-
-    async disconnectFromServer(deleteSubscription?: boolean) {
-        if (this.uaSession) {
-            try {
-                await this.uaSession.closeSession(deleteSubscription)
-                Log.info('Session closed')
-            } catch (e: any) {
-                Log.error('Error closing UA session.', { error: e.message })
-            }
-        }
-        await this.client.disconnect()
-        Log.info('Client disconnected')
-    }
-
-    async getServersOnNetwork(options?: FindServersOnNetworkRequestOptions): Promise<ServerOnNetwork[]> {
-        let servers = await this.client.findServersOnNetwork(options)
-        if (!servers) Log.error('no servers')
-        return servers
-    }
-
-    async getEndpoints(): Promise<EndpointDescription[]> {
-        let endpoints = await this.client.getEndpoints()
-        if (!endpoints) Log.warn('endpoints不存在')
-        return endpoints
-    }
-
-    getPrivateKey() {
-        Log.info('get private key')
-        return this.client.getPrivateKey()
-    }
-
-    getCertificate() {
-        Log.info('get certificate')
-        return this.client.getCertificate()
-    }
-
-    // makeSubject(){
-    //     OPCUACertificateManager
-    // }
-
-    // constructor(endpointMustExist = false, clientName = 'clientName', keepSessionAlive = true,
-    //             applicationName = 'name', certificateFilePath = null, securityMode = MessageSecurityMode.None,
-    //             securityPolicy = SecurityPolicy.None, privateKeyFile = null,
-    //             connectionStrategy = {
-    //                 maxRetry: 3,
-    //                 maxDelay: 2000,
-    //                 initialDelay: 1000,
-    //             }) {
-    //     this.client = OPCUA.OPCUAClient.create({
-    //         applicationName: applicationName,
-    //         certificateFile: certificateFilePath,
-    //         endpointMustExist: endpointMustExist,
-    //         clientName: clientName,
-    //         connectionStrategy: connectionStrategy,
-    //         keepSessionAlive: keepSessionAlive,
-    //         securityMode: securityMode,
-    //         securityPolicy: securityPolicy,
-    //         privateKeyFile: privateKeyFile,
-    //     })
-    //     this.uaSession = null
-    //     this.uaConnectionAlive = null
-    //     this.uaSubscription = null
-    // }
-}
-
-async function nice() {
-    let o: OPCUAClientOptions = {
-        applicationName: 'NodeOPCUA-Client',
-        connectionStrategy: {
-            initialDelay: 1000,
-            maxRetry: 1,
-        },
-        securityMode: MessageSecurityMode.None,
-        securityPolicy: SecurityPolicy.None,
-        endpointMustExist: false,
-    }
-    let user2: UserIdentityInfo = {
-        type: UserTokenType.UserName,
-        userName: 'nice',
-        password: '1234',
-    }
-    let c = new UaClient(o)
-    await c.connectToServer('opc.tcp://WIN-4D29EPFU0V6:53530/OPCUA/SimulationServer')
-    await c.createClientSession()
-    let b = await c.uaSession.browseRootFolder()
-    console.log(b)
-    // let endpoints=await c.getEndpoints()
-    // console.log(endpoints)
-    // console.log(await c.getServersOnNetwork())
-    // console.log(await c.getCertificate())
-    // c.uaSession.addSubscription()
-    // c.uaSession.uaSubscriptions[0]
-    // console.log(await c.uaSession.getNodeIdByBrowseName('/Objects'))
-    let node = await c.uaSession.readByNodeIds([{ nodeId: 'ns=3;i=1001', attributeId: AttributeIds.Value }])
-    console.log(node[0].toString())
-    c.uaSession.addSubscription()
-    c.uaSession.uaSubscriptions.createMonitoredItemGroup([{ nodeId: 'ns=3;i=1003', attributeId: AttributeIds.Value }])
-}
-
-// let a = new UaMessageQueue()
-let o: OPCUAClientOptions = {
-    applicationName: 'Client',
-    connectionStrategy: {
-        initialDelay: 1000,
-        maxRetry: 1,
-    },
-    securityMode: MessageSecurityMode.None,
-    securityPolicy: SecurityPolicy.None,
-    endpointMustExist: false,
-}
-let user2: UserIdentityInfo = {
-    type: UserTokenType.UserName,
-    userName: 'nice',
-    password: '1234',
-}
-let c = new UaClient(o)
-c.connectToServer('opc.tcp://WIN-4D29EPFU0V6:53530/OPCUA/SimulationServer')
-c.getServersOnNetwork({})
-let a = new OPCUACertificateManager({
-    rootFolder: 'C:\\Users\\Administrator\\Desktop\\zhenfan-master',
-    automaticallyAcceptUnknownCertificate: true,
-    name: 'nice',
-})
-let date = new Date()
-a.createSelfSignedCertificate({
-    outputFile: 'C:\\Users\\Administrator\\Desktop\\zhenfan-master\\nice',
-    applicationUri: 'heihei',
-    startDate: date,
-    validity: 1,
-    dns: [1, 2],
-    subject: {},
-})
-// a.createSelfSignedCertificate()
-// a.createSelfSignedCertificate()
-// let x=new CertificateManager({location:'C:\\Users\\Administrator\\Desktop\\zhenfan-master'})
+// async function nice() {
+//     let o: OPCUAClientOptions = {
+//         applicationName: 'NodeOPCUA-Client',
+//         connectionStrategy: {
+//             initialDelay: 1000,
+//             maxRetry: 1,
+//         },
+//         securityMode: MessageSecurityMode.None,
+//         securityPolicy: SecurityPolicy.None,
+//         endpointMustExist: false,
+//     }
+//     let user2: UserIdentityInfo = {
+//         type: UserTokenType.UserName,
+//         userName: 'nice',
+//         password: '1234',
+//     }
+//     let c = new UaClient(o)
+//     await c.connectToServer('opc.tcp://WIN-4D29EPFU0V6:53530/OPCUA/SimulationServer')
+//     await c.createClientSession()
+//     let b = await c.uaSession.browseRootFolder()
+//     console.log(b)
+//     // let endpoints=await c.getEndpoints()
+//     // console.log(endpoints)
+//     // console.log(await c.getServersOnNetwork())
+//     // console.log(await c.getCertificate())
+//     // c.uaSession.addSubscription()
+//     // c.uaSession.uaSubscriptions[0]
+//     // console.log(await c.uaSession.getNodeIdByBrowseName('/Objects'))
+//     let node = await c.uaSession.readByNodeIds([{ nodeId: 'ns=3;i=1001', attributeId: AttributeIds.Value }])
+//     console.log(node[0].toString())
+//     c.uaSession.addSubscription()
+//     c.uaSession.uaSubscriptions.createMonitoredItemGroup([{ nodeId: 'ns=3;i=1003', attributeId: AttributeIds.Value }])
+// }
+//
+// // let a = new UaMessageQueue()
+// let o: OPCUAClientOptions = {
+//     applicationName: 'Client',
+//     connectionStrategy: {
+//         initialDelay: 1000,
+//         maxRetry: 1,
+//     },
+//     securityMode: MessageSecurityMode.None,
+//     securityPolicy: SecurityPolicy.None,
+//     endpointMustExist: false,
+// }
+// let user2: UserIdentityInfo = {
+//     type: UserTokenType.UserName,
+//     userName: 'nice',
+//     password: '1234',
+// }
+// let c = new UaClient(o)
+// c.connectToServer('opc.tcp://WIN-4D29EPFU0V6:53530/OPCUA/SimulationServer')
+// c.getServersOnNetwork({})
+// let a = new OPCUACertificateManager({
+//     rootFolder: 'C:\\Users\\Administrator\\Desktop\\zhenfan-master',
+//     automaticallyAcceptUnknownCertificate: true,
+//     name: 'nice',
+// })
+// let date = new Date()
+// a.createSelfSignedCertificate({
+//     outputFile: 'C:\\Users\\Administrator\\Desktop\\zhenfan-master\\nice',
+//     applicationUri: 'heihei',
+//     startDate: date,
+//     validity: 1,
+//     dns: [1, 2],
+//     subject: {},
+// })
+// // a.createSelfSignedCertificate()
+// // a.createSelfSignedCertificate()
+// // let x=new CertificateManager({location:'C:\\Users\\Administrator\\Desktop\\zhenfan-master'})

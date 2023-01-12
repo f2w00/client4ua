@@ -5,42 +5,34 @@ import { EventEmitter } from 'events'
  * 数据库订阅full/cleared事件即可
  * 当full事件触发之后,会清空队列
  * @author hhj
- * @class
  * @example
- * UaMessageQueue.events.on('pushed',(data)=>{
+ * UaMessageQueue.queueEvents.on('pushed',(data)=>{
  *     handleData(data)
  * })
- *
- * UaMessageQueue.events.on('full',(arrayOfMessages:any[])=>{
+ * UaMessageQueue.queueEvents.on('full',(arrayOfMessages:any[])=>{
  *     eventHandle(arrayOfMessages)
  * })
- *
- * UaMessageQueue.events.on('cleared', () => {
+ * UaMessageQueue.queueEvents.on('cleared', () => {
  *     eventHandle()
  * })
  */
-export class UaMessageQueue {
-    private static queue: any[]
-    private static maxLength: number
-    public static events: EventEmitter
-
-    constructor(maxLength = 200) {
-        UaMessageQueue.queue = []
-        UaMessageQueue.maxLength = maxLength
-        UaMessageQueue.events = new EventEmitter()
-    }
+export module UaMessageQueue {
+    let queue: any[] = []
+    let maxLength: number = 200
+    let queueEvents: EventEmitter = new EventEmitter()
 
     /**
-     * @description 将item推入队列
+     * @example
      * @param item
+     * @private
      */
-    public static enqueue(item: any) {
-        UaMessageQueue.queue.push(item)
-        UaMessageQueue.events.emit('pushed', item)
-        if (UaMessageQueue.queue.length >= UaMessageQueue.maxLength) {
-            UaMessageQueue.events.emit('full', UaMessageQueue.queue.slice(0))
-            UaMessageQueue.queue.length = 0
-            UaMessageQueue.events.emit('cleared')
+    function enqueue(item: any) {
+        queue.push(item)
+        queueEvents.emit('pushed', item)
+        if (queue.length >= maxLength) {
+            queueEvents.emit('full', queue.slice(0))
+            queue.length = 0
+            queueEvents.emit('cleared')
         }
     }
 }
